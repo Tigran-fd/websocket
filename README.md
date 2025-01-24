@@ -1,1 +1,1 @@
-# websocket
+This project creates websocket server and send Moon ra, dec every 10 second
