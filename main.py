@@ -25,7 +25,7 @@ def calculate_julian_date(now:datetime) -> float:
     julian_date += (hour + minute / 60 + second / 3600) / 24
     return julian_date
 
-def get_moon_ra_dec() -> tuple[str, float]:
+def calculate_moon_ra_dec() -> tuple[str, float]:
     now = datetime.now()
 
     julian_date = calculate_julian_date(now)
@@ -63,16 +63,16 @@ def get_moon_ra_dec() -> tuple[str, float]:
     return right_ascension, declination
 
 
-connected_clients = set()
 
 async def handle_connection(websocket):
+    connected_clients = set()
     connected_clients.add(websocket)
     print(f"New client connected: {websocket.remote_address}")
 
     try:
         await websocket.send("Calculating Moon RA/Dec... \n")
         while True:
-            right_ascension, declination = get_moon_ra_dec()
+            right_ascension, declination = calculate_moon_ra_dec()
             message = f"Moon RA: {right_ascension}, Dec: {declination:.3f}°"
             await websocket.send(message)
             await asyncio.sleep(10)
@@ -82,16 +82,16 @@ async def handle_connection(websocket):
         connected_clients.remove(websocket)
 
 async def start_websocket_server():
-    server = await websockets.serve(handle_connection, "localhost", 8765)
-
-    ngrok_tunnel = ngrok.connect("8765", "http")
-    print(f"Ngrok tunnel URL: {ngrok_tunnel.public_url.replace('http', 'ws')}")
-    print("Use the above URL to access the WebSocket server.")
-
-    await server.wait_closed()
-
-if __name__ == "__main__":
     try:
-        asyncio.run(start_websocket_server())
+        server = await websockets.serve(handle_connection, "localhost", 8765)
+
+        ngrok_tunnel = ngrok.connect("8765", "http")
+        print(f"Ngrok tunnel URL: {ngrok_tunnel.public_url.replace('http', 'ws')}")
+        print("Use the above URL to access the WebSocket server.")
+
+        await server.wait_closed()
     except:
         print("The asyncio task was canceled.")
+
+if __name__ == "__main__":
+    asyncio.run(start_websocket_server())
